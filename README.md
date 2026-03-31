@@ -70,7 +70,58 @@ Copy `.env.example` to `.env` and fill in the values:
 
 \* Required only for the relevant workflow step.
 
-## Usage
+## Claude Code Skills
+
+If you open this project in [Claude Code](https://claude.ai/code), seven slash commands are available that wrap the full pipeline. No need to remember CLI flags — just describe what you want.
+
+### Quick start
+
+```
+/pipeline "B2B SaaS project management" --site-url https://mysite.com
+```
+
+That single command runs the entire pipeline: strategy → briefs → write → audit → link.
+
+### Individual skills
+
+| Command | Description |
+|---------|-------------|
+| `/strategy <vertical> [--competitors domain1,domain2] [--pillars N]` | Generate pillar strategy + keyword research |
+| `/briefs <strategy_json> [--articles N] [--pillars 1,2,3]` | Create article briefs from saved strategy |
+| `/write <briefs_dir> <output_dir> [--concurrency N] [--audit]` | Write all articles in parallel |
+| `/audit <path> [--grammar] [--readability] [--grammarly] [--fix]` | Score articles + optional quality checks |
+| `/link <articles_dir> --site-url <url> [--dry-run]` | Build internal links across all articles |
+| `/refresh <articles_dir> [--dry-run]` | Refresh page-2 GSC rankings with Claude |
+| `/pipeline <vertical> [--competitors ...] [--site-url url]` | Full end-to-end pipeline in one command |
+
+All skills accept `--provider anthropic|ollama` and `--model <name>` to switch LLM backends.
+
+### Example workflow
+
+```
+# Step 1 — build strategy with competitor gap analysis
+/strategy ecommerce furniture --competitors wayfair.com ikea.com --pillars 5
+
+# Step 2 — generate 20 briefs per pillar, review briefs_overview.csv before writing
+/briefs strategy_20240101_120000.json --articles 20
+
+# Step 3 — write all 100 articles with SEO audit gate
+/write briefs/ articles/ --concurrency 5 --audit --min-score 75
+
+# Step 4 — deep quality audit with grammar + readability annotation files
+/audit articles/ --grammar --readability --review-files
+
+# Step 5 — inject internal links
+/link articles/ --site-url https://mysite.com
+
+# Later, once articles are live and indexed — refresh page-2 rankings
+/refresh articles/ --dry-run   # preview targets first
+/refresh articles/              # run the refresh
+```
+
+---
+
+## Usage (CLI)
 
 ### 1. Generate a Content Strategy
 
@@ -301,6 +352,15 @@ LLM_MODEL=llama3.1:8b
 
 ```
 content-strategy-agent/
+├── .claude/
+│   └── commands/
+│       ├── pipeline.md  # /pipeline — full end-to-end skill
+│       ├── strategy.md  # /strategy skill
+│       ├── briefs.md    # /briefs skill
+│       ├── write.md     # /write skill
+│       ├── audit.md     # /audit skill
+│       ├── link.md      # /link skill
+│       └── refresh.md   # /refresh skill
 ├── main.py              # Strategy + keyword research CLI
 ├── agent.py             # Pillar strategy generation agent
 ├── keywords.py          # DataForSEO keyword API client
